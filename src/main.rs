@@ -1,16 +1,9 @@
+mod process;
+
 use std::fs;
 use std::io::Read;
 
-struct Process {
-    process_id: u16,
-    process_string: String
-}
-
-impl Process {
-    fn new() -> Process {
-        Process { process_id: 0, process_string: String::new() }
-    }
-}
+use process::Process;
 
 fn get_process_info(entry: &fs::DirEntry) -> Option<Process> {
 
@@ -33,7 +26,8 @@ fn get_process_info(entry: &fs::DirEntry) -> Option<Process> {
     let mut s = String::new();
 
     match cmdfile.read_to_string(&mut s) {
-        Err(e) => println!("Failed to read file {} with error: {}", name, e),
+        Err(e) => println!("Failed to read file {} with error: {}",
+                           name, e),
         _ => ()
     }
 
@@ -44,10 +38,9 @@ fn get_process_info(entry: &fs::DirEntry) -> Option<Process> {
         return None;
     }
 
-    let process = Process {
-        process_string: s,
-        process_id: entry.file_name().into_string().unwrap().parse::<u16>().unwrap()
-    };
+    let pid = entry.file_name().into_string().unwrap()
+        .parse::<u16>().unwrap();
+    let process = Process::new(pid, &s);
 
     Some(process)
 }
@@ -77,7 +70,7 @@ fn read_proc() -> Result<(), String> {
             if is_process_dir(&filename) {
                 let p = get_process_info(&entry);
                 match p {
-                    Some(p) => println!("[{}] :: {}", p.process_id, p.process_string),
+                    Some(p) => println!("{}", p),
                     _ => ()
                 }
             }

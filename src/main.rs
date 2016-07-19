@@ -2,14 +2,21 @@ use std::fs;
 use std::io::Read;
 
 fn get_process_info(entry: &fs::DirEntry) {
+
     let cmdfile = entry.path().join("cmdline");
+    let name = String::from(cmdfile.to_str().unwrap_or("no-name"));
+
     if !cmdfile.exists() {
-        println!("Could not find cmdfile - {}", cmdfile.to_str().unwrap_or("--"));
+        println!("Could not find cmdfile - {}", name);
     }
 
     let mut cmdfile = fs::File::open(cmdfile).unwrap();
     let mut s = String::new();
-    cmdfile.read_to_string(&mut s).unwrap();
+
+    match cmdfile.read_to_string(&mut s) {
+        Err(e) => println!("Failed to read file {} with error: {}", name, e),
+        _ => ()
+    }
 
     let v: Vec<&str> = s.split(|c: char| c == 0 as char).collect();
     let s = v.join(" ");

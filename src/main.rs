@@ -26,8 +26,9 @@ fn get_process_info(entry: &fs::DirEntry) -> Option<Process> {
     let mut s = String::new();
 
     match cmdfile.read_to_string(&mut s) {
-        Err(e) => println!("Failed to read file {} with error: {}",
-                           name, e),
+        Err(e) => {
+            println!("Failed to read file {}: error: {}", name, e);
+        },
         _ => ()
     }
 
@@ -46,10 +47,7 @@ fn get_process_info(entry: &fs::DirEntry) -> Option<Process> {
 }
 
 fn is_process_dir(d: &str) -> bool {
-    match d.parse::<u16>() {
-        Err(_) => false,
-        _ => true
-    }
+    d.parse::<u16>().is_ok()
 }
 
 fn read_proc() -> Result<(), String> {

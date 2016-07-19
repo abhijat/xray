@@ -1,19 +1,31 @@
 use std::fs;
 use std::io::Read;
 
-fn get_process_info(entry: &fs::DirEntry) {
+struct Process {
+    process_id: u16,
+    process_string: String
+}
+
+impl Process {
+    fn new() -> Process {
+        Process { process_id: 0, process_string: String::new() }
+    }
+}
+
+fn get_process_info(entry: &fs::DirEntry) -> Option<Process> {
 
     let cmdfile = entry.path().join("cmdline");
     let name = String::from(cmdfile.to_str().unwrap_or("no-name"));
 
     if !cmdfile.exists() {
         println!("Could not find cmdfile - {}", name);
+        return None;
     }
 
     let mut cmdfile = match fs::File::open(cmdfile) {
         Err(e) => {
             println!("Failed to open file {} with error {}", name, e);
-            return;
+            return None;
         }
         Ok(f) => f,
     };
@@ -28,7 +40,16 @@ fn get_process_info(entry: &fs::DirEntry) {
     let v: Vec<&str> = s.split(|c: char| c == 0 as char).collect();
     let s = v.join(" ");
 
-    println!("{} // {}", entry.path().display(), s);
+    if s.is_empty() {
+        return None;
+    }
+
+    let process = Process {
+        process_string: s,
+        process_id: entry.file_name().into_string().unwrap().parse::<u16>().unwrap()
+    };
+
+    Some(process)
 }
 
 fn is_process_dir(d: &str) -> bool {
@@ -54,7 +75,11 @@ fn read_proc() -> Result<(), String> {
                 .unwrap_or("unstringable".to_string());
 
             if is_process_dir(&filename) {
-                get_process_info(&entry);
+                let p = get_process_info(&entry);
+                match p {
+                    Some(p) => println!("[{}] :: {}", p.process_id, p.process_string),
+                    _ => ()
+                }
             }
         }
     }

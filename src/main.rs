@@ -10,7 +10,14 @@ fn get_process_info(entry: &fs::DirEntry) {
         println!("Could not find cmdfile - {}", name);
     }
 
-    let mut cmdfile = fs::File::open(cmdfile).unwrap();
+    let mut cmdfile = match fs::File::open(cmdfile) {
+        Err(e) => {
+            println!("Failed to open file {} with error {}", name, e);
+            return;
+        }
+        Ok(f) => f,
+    };
+
     let mut s = String::new();
 
     match cmdfile.read_to_string(&mut s) {
